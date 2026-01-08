@@ -1,6 +1,6 @@
 blueprint:
-  name: "IKEA Bilresa Scroll Wheel – Lysstyrkestyring (Højre & Venstre)"
-  description: "Universel lysstyrkestyring til IKEA Bilresa scroll-hjul med separate indstillinger for højre- og venstredrejning"
+  name: "IKEA Bilresa Scroll Wheel – Lysstyrkestyring (flere lamper)"
+  description: "Styr lysstyrke for én eller flere lamper med IKEA Bilresa scroll-hjul"
   domain: automation
 
   input:
@@ -16,12 +16,13 @@ blueprint:
       selector:
         entity:
 
-    target_light:
-      name: "Målampe"
-      description: "Lampen der skal styres"
+    target_lights:
+      name: "Lamper der skal styres"
+      description: "Vælg én eller flere lamper"
       selector:
-        entity:
-          domain: light
+        target:
+          entity:
+            domain: light
 
     scroll_right_direction:
       name: "Handling ved højredrejning"
@@ -47,34 +48,16 @@ blueprint:
               value: "dim"
       default: "dim"
 
-    brightness_per_step_right:
-      name: "Lysstyrke pr. trin – Højre (%)"
+    brightness_per_step:
+      name: "Lysstyrke pr. trin (%)"
       default: 5
       selector:
         number:
           min: 1
           max: 20
 
-    brightness_per_step_left:
-      name: "Lysstyrke pr. trin – Venstre (%)"
-      default: 5
-      selector:
-        number:
-          min: 1
-          max: 20
-
-    startup_brightness_right:
-      name: "Start-lysstyrke ved tænding – Højre (%)"
-      description: "Lysstyrke i %, som lyset tændes med ved højredrejning"
-      default: 20
-      selector:
-        number:
-          min: 5
-          max: 50
-
-    startup_brightness_left:
-      name: "Start-lysstyrke ved tænding – Venstre (%)"
-      description: "Lysstyrke i %, som lyset tændes med ved venstredrejning"
+    startup_brightness:
+      name: "Start-lysstyrke ved tænding (%)"
       default: 20
       selector:
         number:
@@ -84,90 +67,50 @@ blueprint:
 trigger:
   - platform: state
     entity_id: !input scrollwheel_right_event_entity
-    id: "højre_scroll"
+    id: "højre"
 
   - platform: state
     entity_id: !input scrollwheel_left_event_entity
-    id: "venstre_scroll"
+    id: "venstre"
 
 action:
   - variables:
-      er_højre_scroll: "{{ trigger.id == 'højre_scroll' }}"
+      er_højre: "{{ trigger.id == 'højre' }}"
       retning_højre: !input scroll_right_direction
       retning_venstre: !input scroll_left_direction
-      trin_højre: !input brightness_per_step_right
-      trin_venstre: !input brightness_per_step_left
-      start_højre: !input startup_brightness_right
-      start_venstre: !input startup_brightness_left
-      lampe: !input target_light
+      lys_trin: !input brightness_per_step
+      start_lys: !input startup_brightness
 
-      # Bestem om lysstyrken skal op eller ned
+      # Bestem retning (+ / -)
       retning: >-
-        {% if er_højre_scroll %}
+        {% if er_højre %}
           {{ 1 if retning_højre == 'brighten' else -1 }}
         {% else %}
           {{ 1 if retning_venstre == 'brighten' else -1 }}
         {% endif %}
 
-      # Lysstyrketrin afhængigt af retning
-      lys_trin: "{{ trin_højre if er_højre_scroll else trin_venstre }}"
+      lys_ændring: "{{ lys_trin | int * retning }}"
 
-      # Start-lysstyrke afhængigt af retning
-      start_lys: "{{ start_højre if er_højre_scroll else start_venstre }}"
-
-      # Antal registrerede drejninger
-      antal_drej: "{{ trigger.to_state.attributes.totalNumberOfPressesCounted | int(1) }}"
-
-      # Samlet ændring i lysstyrke
-      lys_ændring: "{{ lys_trin | int * antal_drej | int * retning }}"
-
-      # Status på lampen
-      lys_tændt: "{{ states(lampe) == 'on' }}"
-      nuværende_lys: "{{ state_attr(lampe, 'brightness') | int(0) }}"
-      nuværende_pct: "{{ ((nuværende_lys / 255) * 100) | round(1) }}"
-
-      # Beregn ny lysstyrke (med grænser)
-      rå_lys: "{{ start_lys | int + lys_ændring }}"
-      ny_lys: >-
-        {% if rå_lys < 10 %}
-          10
-        {% elif rå_lys > 100 %}
-          100
-        {% else %}
-          {{ rå_lys }}
-        {% endif %}
-
-  - if:
-      - condition: template
-        value_template: "{{ lys_tændt }}"
-    then:
-      # Lampen er TÆNDT – justér lysstyrke
-      - service: light.turn_on
-        target:
-          entity_id: !input target_light
-        data:
-          brightness_step_pct: "{{ lys_ændring }}"
-    else:
-      # Lampen er SLUKKET
-      - if:
+  - choose:
+      - conditions:
           - condition: template
             value_template: "{{ retning > 0 }}"
-        then:
-          # Drej op → tænd med start-lysstyrke
+        sequence:
+          # Forøg lysstyrke (tænd hvis slukket)
           - service: light.turn_on
-            target:
-              entity_id: !input target_light
+            target: !input target_lights
             data:
-              brightness_pct: "{{ ny_lys | int }}"
-        else:
-          # Drej ned → forbliv slukket
-          - service: light.turn_off
-            target:
-              entity_id: !input target_light
+              brightness_step_pct: "{{ lys_ændring }}"
+              brightness_pct: "{{ start_lys }}"
+    default:
+      # Reducér lysstyrke
+      - service: light.turn_on
+        target: !input target_lights
+        data:
+          brightness_step_pct: "{{ lys_ændring }}"
 
 mode: queued
 max: 20
 
-          max: 50
 
     startup_brightness_left:
