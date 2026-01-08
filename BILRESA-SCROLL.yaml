@@ -1,6 +1,6 @@
 blueprint:
-  name: "IKEA Bilresa Scroll Wheel – Lysstyrkestyring (flere lamper)"
-  description: "Styr lysstyrke for én eller flere lamper med IKEA Bilresa scroll-hjul"
+  name: "IKEA Bilresa Scroll Wheel – Lysstyrkestyring (Højre & Venstre, flere lamper)"
+  description: "Styr lysstyrke for én eller flere lamper med IKEA Bilresa scroll-hjul. Separate indstillinger for højre- og venstredrejning."
   domain: automation
 
   input:
@@ -48,16 +48,34 @@ blueprint:
               value: "dim"
       default: "dim"
 
-    brightness_per_step:
-      name: "Lysstyrke pr. trin (%)"
+    brightness_per_step_right:
+      name: "Lysstyrke pr. trin – Højre (%)"
       default: 5
       selector:
         number:
           min: 1
           max: 20
 
-    startup_brightness:
-      name: "Start-lysstyrke ved tænding (%)"
+    brightness_per_step_left:
+      name: "Lysstyrke pr. trin – Venstre (%)"
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 20
+
+    startup_brightness_right:
+      name: "Start-lysstyrke ved tænding – Højre (%)"
+      description: "Lysstyrke i %, som lyset tændes med ved højredrejning"
+      default: 20
+      selector:
+        number:
+          min: 5
+          max: 50
+
+    startup_brightness_left:
+      name: "Start-lysstyrke ved tænding – Venstre (%)"
+      description: "Lysstyrke i %, som lyset tændes med ved venstredrejning"
       default: 20
       selector:
         number:
@@ -78,8 +96,11 @@ action:
       er_højre: "{{ trigger.id == 'højre' }}"
       retning_højre: !input scroll_right_direction
       retning_venstre: !input scroll_left_direction
-      lys_trin: !input brightness_per_step
-      start_lys: !input startup_brightness
+      trin_højre: !input brightness_per_step_right
+      trin_venstre: !input brightness_per_step_left
+      start_højre: !input startup_brightness_right
+      start_venstre: !input startup_brightness_left
+      lamper: !input target_lights
 
       # Bestem retning (+ / -)
       retning: >-
@@ -89,25 +110,30 @@ action:
           {{ 1 if retning_venstre == 'brighten' else -1 }}
         {% endif %}
 
-      lys_ændring: "{{ lys_trin | int * retning }}"
+      # Lysændring pr. trigger
+      lys_ændring: "{{ (trin_højre if er_højre else trin_venstre) | int * retning }}"
+
+      # Start-lys afhængigt af retning
+      start_lys: "{{ start_højre if er_højre else start_venstre }}"
 
   - choose:
       - conditions:
           - condition: template
             value_template: "{{ retning > 0 }}"
         sequence:
-          # Forøg lysstyrke (tænd hvis slukket)
+          # Drej op → tænd lampen(e) med start-lys + step
           - service: light.turn_on
-            target: !input target_lights
+            target: "{{ lamper }}"
             data:
               brightness_step_pct: "{{ lys_ændring }}"
               brightness_pct: "{{ start_lys }}"
     default:
-      # Reducér lysstyrke
+      # Drej ned → reducer lysstyrke
       - service: light.turn_on
-        target: !input target_lights
+        target: "{{ lamper }}"
         data:
           brightness_step_pct: "{{ lys_ændring }}"
 
 mode: queued
 max: 20
+
