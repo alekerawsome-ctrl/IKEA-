@@ -1,0 +1,75 @@
+blueprint:
+  name: "IKEA Bilresa Scroll Wheel – Lysstyrkestyring (Højre & Venstre)"
+  description: "Universel lysstyrkestyring til IKEA Bilresa scroll-hjul med separate indstillinger for højre- og venstredrejning"
+  domain: automation
+
+  input:
+    scrollwheel_right_event_entity:
+      name: "Scroll-hjul hændelses-entity – Højredrejning"
+      description: "Hændelses-entity for scroll-hjulet ved drejning mod højre"
+      selector:
+        entity:
+
+    scrollwheel_left_event_entity:
+      name: "Scroll-hjul hændelses-entity – Venstredrejning"
+      description: "Hændelses-entity for scroll-hjulet ved drejning mod venstre"
+      selector:
+        entity:
+
+    target_light:
+      name: "Målampe"
+      description: "Lampen der skal styres"
+      selector:
+        entity:
+          domain: light
+
+    scroll_right_direction:
+      name: "Handling ved højredrejning"
+      description: "Hvad skal der ske ved drejning mod højre?"
+      selector:
+        select:
+          options:
+            - label: "Forøg lysstyrke"
+              value: "brighten"
+            - label: "Reducer lysstyrke"
+              value: "dim"
+      default: "brighten"
+
+    scroll_left_direction:
+      name: "Handling ved venstredrejning"
+      description: "Hvad skal der ske ved drejning mod venstre?"
+      selector:
+        select:
+          options:
+            - label: "Forøg lysstyrke"
+              value: "brighten"
+            - label: "Reducer lysstyrke"
+              value: "dim"
+      default: "dim"
+
+    brightness_per_step_right:
+      name: "Lysstyrke pr. trin – Højre (%)"
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 20
+
+    brightness_per_step_left:
+      name: "Lysstyrke pr. trin – Venstre (%)"
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 20
+
+    startup_brightness_right:
+      name: "Start-lysstyrke ved tænding – Højre (%)"
+      description: "Lysstyrke i %, som lyset tændes med ved højredrejning"
+      default: 20
+      selector:
+        number:
+          min: 5
+          max: 50
+
+    startup_brightness_left:
