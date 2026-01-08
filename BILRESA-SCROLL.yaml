@@ -111,6 +111,3 @@ action:
 
 mode: queued
 max: 20
-
-
-    startup_brightness_left:
