@@ -1,5 +1,5 @@
 blueprint:
-  name: Ikea_bilresa_scroll_wheel_multi_remote
+  name: Ikea_bilresa_scroll_wheel_multi_remoteV2
   description: |
     Blueprint for Ikea Bilresa (button and scroll wheel for 3 different channels)
     Multi-remote enabled version
