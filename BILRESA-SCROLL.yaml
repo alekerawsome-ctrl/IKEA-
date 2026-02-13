@@ -1,15 +1,15 @@
 blueprint:
   name: Ikea_bilresa_scroll_wheel_multi_remote
   description: |
-      Blueprint for Ikea Bilresa (button and scroll wheel for 3 different channels)
-      Multi-remote enabled version
-      Version: 2026-01-10
+    Blueprint for Ikea Bilresa (button and scroll wheel for 3 different channels)
+    Multi-remote enabled version
+    Version: 2026-02-13
   domain: automation
 
   input:
     remotes:
       name: Remotes
-      description: "One or more Ikea Bilresa scroll wheel remotes"
+      description: One or more Ikea Bilresa scroll wheel remotes
       selector:
         device:
           multiple: true
@@ -108,6 +108,7 @@ blueprint:
                 domain: [light, media_player]
           default: []
         scroll_wheel_mode_ch2:
+          name: "Channel 2: Scroll wheel mode"
           default: "lights: dim"
           selector:
             select:
@@ -119,11 +120,13 @@ blueprint:
                 - "media: volume control"
                 - "user defined"
         scroll_wheel_mode_ext_ch2:
+          name: "Channel 2: Scroll wheel evaluation mode"
           default: "relaxed"
           selector:
             select:
               options: ["relaxed", "instant"]
         scroll_wheel_user_action_ch2:
+          name: "Channel 2: User defined scroll wheel action"
           default: []
           selector:
             action: {}
@@ -134,22 +137,27 @@ blueprint:
       collapsed: true
       input:
         click_action_ch3:
+          name: "Channel 3: <click> action"
           default: []
           selector:
             action: {}
         double_click_action_ch3:
+          name: "Channel 3: <double-click> action"
           default: []
           selector:
             action: {}
         long_click_action_ch3:
+          name: "Channel 3: <long-click> action"
           default: []
           selector:
             action: {}
         on_hold_action_ch3:
+          name: "Channel 3: <on-hold> action"
           default: []
           selector:
             action: {}
         scroll_wheel_target_ch3:
+          name: "Channel 3: Scroll wheel target entity"
           selector:
             entity:
               multiple: true
@@ -157,6 +165,7 @@ blueprint:
                 domain: [light, media_player]
           default: []
         scroll_wheel_mode_ch3:
+          name: "Channel 3: Scroll wheel mode"
           default: "lights: dim"
           selector:
             select:
@@ -168,11 +177,13 @@ blueprint:
                 - "media: volume control"
                 - "user defined"
         scroll_wheel_mode_ext_ch3:
+          name: "Channel 3: Scroll wheel evaluation mode"
           default: "relaxed"
           selector:
             select:
               options: ["relaxed", "instant"]
         scroll_wheel_user_action_ch3:
+          name: "Channel 3: User defined scroll wheel action"
           default: []
           selector:
             action: {}
@@ -238,57 +249,22 @@ blueprint:
               mode: box
               step: 0.1
 
+
 # ==================== AUTOMATION ====================
 
 alias: Ikea_bilresa_scroll_wheel_multi_remote
+mode: queued
 
 trigger:
   - platform: event
     event_type: state_changed
-
-condition:
-  - condition: template
-    value_template: >
-      {{ trigger.event.data.entity_id in
-         ((var_button_ch1 | default([])) +
-          (var_scroll_left_ch1 | default([])) +
-          (var_scroll_right_ch1 | default([])) +
-
-          (var_button_ch2 | default([])) +
-          (var_scroll_left_ch2 | default([])) +
-          (var_scroll_right_ch2 | default([])) +
-
-          (var_button_ch3 | default([])) +
-          (var_scroll_left_ch3 | default([])) +
-          (var_scroll_right_ch3 | default([])) +
-
-          (var_scroll_left_ext_ch1 | default([])) +
-          (var_scroll_right_ext_ch1 | default([])) +
-          (var_scroll_left_ext_ch2 | default([])) +
-          (var_scroll_right_ext_ch2 | default([])) +
-          (var_scroll_left_ext_ch3 | default([])) +
-          (var_scroll_right_ext_ch3 | default([])))
-      }}
-action:
-  # --- Your existing action logic remains unchanged ---
-  # Because all entity variables now contain lists,
-  # the rest of your original automation logic works identically.
-  - service: logbook.log
-    data:
-      name: Bilresa Multi Remote
-      message: "Event received from {{ trigger.event.data.entity_id }}"
-
-mode: queued
 
 # ==================== VARIABLES ====================
 
 variables:
   var_remotes: !input remotes
 
-# ========== ENTITY COLLECTION ==========
-
-trigger_variables:
-
+  # === CHANNEL 1 ENTITIES ===
   var_button_ch1: >
     {% set out = [] %}
     {% for dev in var_remotes %}
@@ -298,7 +274,7 @@ trigger_variables:
         {% endif %}
       {% endfor %}
     {% endfor %}
-    {{ out }}
+    {{ out | list }}
 
   var_scroll_left_ch1: >
     {% set out = [] %}
@@ -309,7 +285,7 @@ trigger_variables:
         {% endif %}
       {% endfor %}
     {% endfor %}
-    {{ out }}
+    {{ out | list }}
 
   var_scroll_right_ch1: >
     {% set out = [] %}
@@ -320,7 +296,7 @@ trigger_variables:
         {% endif %}
       {% endfor %}
     {% endfor %}
-    {{ out }}
+    {{ out | list }}
 
   var_scroll_left_ext_ch1: >
     {% set out = [] %}
@@ -331,7 +307,7 @@ trigger_variables:
         {% endif %}
       {% endfor %}
     {% endfor %}
-    {{ out }}
+    {{ out | list }}
 
   var_scroll_right_ext_ch1: >
     {% set out = [] %}
@@ -342,9 +318,101 @@ trigger_variables:
         {% endif %}
       {% endfor %}
     {% endfor %}
-    {{ out }}
+    {{ out | list }}
 
-  # Repeat same pattern for CH2 and CH3
-  # (Omitted here for brevity — pattern identical to above,
-  # just replace suffix numbers exactly as in your original.)
 
+  # === CHANNEL 2 ENTITIES ===
+  var_button_ch2: >
+    {% set out = [] %}
+    {% for dev in var_remotes %}
+      {% for e in device_entities(dev) %}
+        {% if e is match('^event\\..+_6') %}
+          {% set out = out + [e] %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    {{ out | list }}
+
+  var_scroll_left_ch2: >
+    {% set out = [] %}
+    {% for dev in var_remotes %}
+      {% for e in device_entities(dev) %}
+        {% if e is match('^event\\..+_5') %}
+          {% set out = out + [e] %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    {{ out | list }}
+
+  var_scroll_right_ch2: >
+    {% set out = [] %}
+    {% for dev in var_remotes %}
+      {% for e in device_entities(dev) %}
+        {% if e is match('^event\\..+_4') %}
+          {% set out = out + [e] %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    {{ out | list }}
+
+  var_scroll_left_ext_ch2: >
+    {% set out = [] %}
+    {% for dev in var_remotes %}
+      {% for e in device_entities(dev) %}
+        {% if e is match('^sensor\\..+_5') %}
+          {% set out = out + [e] %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    {{ out | list }}
+
+  var_scroll_right_ext_ch2: >
+    {% set out = [] %}
+    {% for dev in var_remotes %}
+      {% for e in device_entities(dev) %}
+        {% if e is match('^sensor\\..+_4') %}
+          {% set out = out + [e] %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    {{ out | list }}
+
+
+  # === CHANNEL 3 ENTITIES ===
+  var_button_ch3: >
+    {% set out = [] %}
+    {% for dev in var_remotes %}
+      {% for e in device_entities(dev) %}
+        {% if e is match('^event\\..+_9') %}
+          {% set out = out + [e] %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    {{ out | list }}
+
+  var_scroll_left_ch3: >
+    {% set out = [] %}
+    {% for dev in var_remotes %}
+      {% for e in device_entities(dev) %}
+        {% if e is match('^event\\..+_8') %}
+          {% set out = out + [e] %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    {{ out | list }}
+
+  var_scroll_right_ch3: >
+    {% set out = [] %}
+    {% for dev in var_remotes %}
+      {% for e in device_entities(dev) %}
+        {% if e is match('^event\\..+_7') %}
+          {% set out = out + [e] %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    {{ out | list }}
+
+  var_scroll_left_ext_ch3: >
+    {% set out = [] %}
+    {% for dev in var_remotes %}
+      {% for e in device_entities(dev)_
