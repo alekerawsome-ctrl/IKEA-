@@ -250,14 +250,25 @@ condition:
   - condition: template
     value_template: >
       {{ trigger.event.data.entity_id in
-         (var_button_ch1 + var_scroll_left_ch1 + var_scroll_right_ch1 +
-          var_button_ch2 + var_scroll_left_ch2 + var_scroll_right_ch2 +
-          var_button_ch3 + var_scroll_left_ch3 + var_scroll_right_ch3 +
-          var_scroll_left_ext_ch1 + var_scroll_right_ext_ch1 +
-          var_scroll_left_ext_ch2 + var_scroll_right_ext_ch2 +
-          var_scroll_left_ext_ch3 + var_scroll_right_ext_ch3)
-      }}
+         ((var_button_ch1 | default([])) +
+          (var_scroll_left_ch1 | default([])) +
+          (var_scroll_right_ch1 | default([])) +
 
+          (var_button_ch2 | default([])) +
+          (var_scroll_left_ch2 | default([])) +
+          (var_scroll_right_ch2 | default([])) +
+
+          (var_button_ch3 | default([])) +
+          (var_scroll_left_ch3 | default([])) +
+          (var_scroll_right_ch3 | default([])) +
+
+          (var_scroll_left_ext_ch1 | default([])) +
+          (var_scroll_right_ext_ch1 | default([])) +
+          (var_scroll_left_ext_ch2 | default([])) +
+          (var_scroll_right_ext_ch2 | default([])) +
+          (var_scroll_left_ext_ch3 | default([])) +
+          (var_scroll_right_ext_ch3 | default([])))
+      }}
 action:
   # --- Your existing action logic remains unchanged ---
   # Because all entity variables now contain lists,
